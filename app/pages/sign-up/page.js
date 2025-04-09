@@ -78,7 +78,8 @@ export default function SignUp() {
 
     setLoading(false);
     // After sign-up, Supabase sends a magic link or verification email by default.
-    router.replace("/"); 
+    alert("You have signed up successfully!");
+    router.replace("./"); 
   };
 
   // handle Google OAuth sign-up
