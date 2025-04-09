@@ -26,7 +26,7 @@ export default function SignIn() {
                 <div className="h-0 w-100 border-[#C4BB96] border-1 rounded-full mt-5"></div>
                 <button className="bg-white text-black font-bold p-2 rounded-md mt-5 w-30 flex items-center justify-center">SIGN IN<Image src="/assets/7123025_logo_google_g_icon.png" alt="Google Icon" width={36} height={36} className="ml-2"/>{/*https://www.iconfinder.com/icons/7123025/logo_google_g_icon*/}</button>
                 <div className="h-0 w-100 border-[#C4BB96] border-1 rounded-full mt-5"></div>
-                <p className="text-[#C4BB96] mt-10">DON'T HAVE AN ACCOUNT?</p>
+                <p className="text-[#C4BB96] mt-10">DON&#39;T HAVE AN ACCOUNT?</p>
                 <button className="text-[#C4BB96] border-b-2">SIGN UP</button>
 
             </main>
