@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { supabase } from "./_utils/supabase-client"; // Adjust the import path as necessary
+import { supabase } from "@/supabase-client"; // Adjust the import path as necessary
 
 export default function SignIn() {
   const router = useRouter();
