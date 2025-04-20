@@ -1,3 +1,4 @@
+// pages/api/users/index.js
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseServer = createClient(
@@ -5,7 +6,6 @@ const supabaseServer = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-// pages/api/users/index.js
 import { supabase } from "@/utils/supabase-client";
 
 export default async function handler(req, res) {
