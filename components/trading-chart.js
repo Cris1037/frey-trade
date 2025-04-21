@@ -10,7 +10,7 @@ export default function TradingChart({ data }) {
     if (!chartContainerRef.current || !data?.length) return;
 
     const chart = createChart(chartContainerRef.current, {
-      width: 900,
+      width: 1075,
       height: 500,
       layout: {
         background: { color: '#123A41' },
@@ -45,5 +45,5 @@ export default function TradingChart({ data }) {
     };
   }, [data]);
 
-  return <div ref={chartContainerRef} className="w-900 h-[500px]" />;
+  return <div ref={chartContainerRef} className="w-[1075px] h-[500px]" />;
 }

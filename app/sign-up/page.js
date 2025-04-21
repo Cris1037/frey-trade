@@ -34,6 +34,9 @@ export default function SignUp() {
       return;
     }
 
+    await supabase
+    .from('accounts')
+    .upsert({ user_id: user.id }, { onConflict: 'user_id' });
     setLoading(false);
     router.replace("../home");
   };
