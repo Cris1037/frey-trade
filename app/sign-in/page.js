@@ -85,7 +85,7 @@ export default function SignIn() {
           </button>
         </form>
 
-        <div className="w-full border-t border-[#C4BB96] my-5" />
+        <div className="w-full border-t border-[#C4BB96] my-2" />
 
         <button
           onClick={handleGoogleSignIn}
@@ -102,7 +102,7 @@ export default function SignIn() {
           />
         </button>
 
-        <div className="w-full border-t border-[#C4BB96] my-5" />
+        <div className="w-full border-t border-[#C4BB96] my-2" />
 
         <p className="text-[#C4BB96]">DON’T HAVE AN ACCOUNT?</p>
         <button
@@ -111,6 +111,12 @@ export default function SignIn() {
         >
           SIGN UP
         </button>
+        <div className="w-full border-t border-[#C4BB96] my-2" />
+        <button
+          onClick={() => router.push("/forgot-password")}
+          className="text-[#C4BB96] border-b mt-2">
+          FORGOT PASSWORD?
+          </button>
       </main>
     </div>
   );

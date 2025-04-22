@@ -1,5 +1,3 @@
-
-
 // app/api/users/route.js
 import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
@@ -9,12 +7,54 @@ const supabaseServer = createClient(
   process.env.SUPABASE_SERVICE_KEY
 );
 
-export async function GET(request) {
+export async function POST(request) {
   try {
-    // Get user ID from validated session
+    const body = await request.json();
+    const { 
+      id,
+      email,
+      first_name = '',  // Default empty string
+      last_name = '',   // Default empty string
+      security_question = 'Google authenticated user',
+      security_answer = 'N/A'
+    } = body;
+
+    if (!id || !email) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
+    const { error } = await supabaseServer.rpc('create_user_account', {
+      p_user_id: id,
+      p_email: email,
+      p_first_name: first_name,
+      p_last_name: last_name,
+      p_security_question: security_question,
+      p_security_answer: security_answer
+    });
+
+    if (error) throw error;
+
+    return NextResponse.json({ success: true }, { status: 201 });
+
+  } catch (error) {
+    console.error("User creation failed:", error);
+    return NextResponse.json(
+      { error: error.message || "Internal server error" },
+      { status: 500 }
+    );
+  }
+}
+
+// Updated PUT method
+export async function PUT(request) {
+  try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    
+    const body = await request.json();
+
     if (!userId) {
       return NextResponse.json(
         { error: "Unauthorized" },
@@ -24,78 +64,46 @@ export async function GET(request) {
 
     const { data, error } = await supabaseServer
       .from("users")
-      .select("*")
+      .update(body)
       .eq("id", userId)
       .single();
 
     if (error) throw error;
-    
     return NextResponse.json(data);
 
   } catch (error) {
-    console.error("GET Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error" },
+      { error: error.message || "Update failed" },
       { status: 500 }
     );
   }
 }
 
-export async function POST(request) {
+// Updated DELETE method
+export async function DELETE(request) {
   try {
-    const body = await request.json();
-    const { user } = body;
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
 
-    if (!user?.id) {
+    if (!userId) {
       return NextResponse.json(
-        { error: "Invalid user data" },
-        { status: 400 }
+        { error: "Unauthorized" },
+        { status: 401 }
       );
     }
 
     const { error } = await supabaseServer
-      .from('users')
-      .upsert({
-        id: user.id,
-        email: user.email,
-        first_name: user.user_metadata?.given_name || '',
-        last_name: user.user_metadata?.family_name || ''
-      });
+      .from("users")
+      .delete()
+      .eq("id", userId);
 
     if (error) throw error;
-
-    return NextResponse.json(
-      { success: true },
-      { status: 201 }
-    );
+    return new Response(null, { status: 204 });
 
   } catch (error) {
-    console.error("POST Error:", error);
     return NextResponse.json(
-      { error: "User creation failed" },
+      { error: error.message || "Delete failed" },
       { status: 500 }
     );
   }
 }
-
-    export async function PUT(request) {
-      if (!userId) return res.status(401).json({ error: "Unauthorized" });
-      const { id, ...updates } = body;
-      const { data, error } = await supabase
-        .from("users")
-        .update(updates)
-        .eq("id", id)
-        .single();
-      if (error) return res.status(500).json(error);
-      return res.status(200).json(data);
-    }
-
-    export async function DELETE(request) {
-            if (!userId) return res.status(401).json({ error: "Unauthorized" });
-            const { id } = body;
-            const { error } = await supabase.from("users").delete().eq("id", id);
-            if (error) return res.status(500).json(error);
-            return res.status(204).end();
-          }
-
-// Similar improvements for PUT and DELETE methods

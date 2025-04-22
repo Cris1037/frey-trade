@@ -1,4 +1,4 @@
-//components/TradingChart.jsx
+//components/trading-chart.jsx
 'use client';
 import { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';

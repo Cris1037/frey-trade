@@ -1,3 +1,4 @@
+//components/stock-search.jsx
 'use client';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
@@ -56,7 +57,7 @@ const searchStocks = async (searchQuery) => {
         </button>
       </div>
 
-      {loading && <div className="mt-2 text-[#46708D]">Loading...</div>}
+      {loading && <div className="mt-2 text-[#C4BB96]">Loading...</div>}
 
       {results.length > 0 && (
         <div className="absolute z-10 w-full mt-2 bg-white border border-gray-200 rounded-lg shadow-lg">

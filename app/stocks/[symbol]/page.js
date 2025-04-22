@@ -4,6 +4,8 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { supabase } from '@/utils/supabase-client';
+import SecureRoute from '@/utils/secure-route';
+
 import TradingChart from '../../../components/trading-chart';
 
 export default function StockPage() {
@@ -48,16 +50,13 @@ export default function StockPage() {
             symbol: profileData.symbol,
             companyName: profileData.companyName,
             price: profileData.price,
+            changes: Number(profileData.changes) || 0,
             mktCap: Number(profileData.mktCap) || 0, // Corrected property name
-            pe: profileData.pe,
             exchange: profileData.exchangeShortName,
-            yearHigh: profileData.yearHigh,
-            yearLow: profileData.yearLow,
             beta: profileData.beta,
             open: profileData.open,
             previousClose: profileData.previousClose,
-            volAvg: profileData.volAvg,
-            image: profileData.image
+            volAvg: Number(profileData.volAvg) || 0,
           });
         
           setHistoricalData(historicalData);
@@ -231,13 +230,24 @@ export default function StockPage() {
     if (!stockData) return <div className="flex justify-center items-center min-h-screen">Stock data not available</div>;
 
 return (
+    <SecureRoute>
     <div className=" min-h-screen flex justify-center items-center"> {/* Main container */}
+    <button
+        onClick={() => router.push('/home')}
+        className="absolute top-4 left-4 bg-[#A57730] text-black px-4 py-2 rounded hover:bg-[#C4BB96] transition-colors"
+    >
+        Back
+    </button>
         <div className="m-10 max-w-6xl  bg-[#123A41] rounded-xl shadow-lg p-6"> {/* Content wrapper */}
-
-            <h1 className="text-3xl font-bold mb-6 text-[#C4BB96] text-center">
-                {stockData.companyName} ({stockData.symbol}) <image src={stockData.image} alt="Logo" width={50} height={50} className="inline-block ml-2" />
-            </h1>
-            
+            <header>
+                <h1 className="text-3xl font-bold mb-6 text-[#C4BB96] text-center">
+                    {stockData.companyName} ({stockData.symbol})
+                    <p className={` text-center ${stockData.changes > 0 ? 'text-green-500': 'text-red-500'}`} >
+                        {stockData.changes}%
+                    </p>
+                </h1>
+                
+            </header>
             {/* Chart Container */}
             <div className="mb-8 border-2 border-[#A57730] p-4 rounded-lg">
                 <TradingChart data={historicalData} className="w-10"/>
@@ -277,9 +287,13 @@ return (
                 </div>
         
                 {/* Metrics Grid */}
-                <div className=" p-4 rounded-lg text-[#C4BB96] border-2 border-[#A57730] text-center grid grid-cols-6 gap-4">
+                <div className=" p-4 rounded-lg text-[#C4BB96] border-2 border-[#A57730] text-center grid grid-cols-5 gap-4">
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Market Cap</h3>
+                        <h3 className="text-lg font-semibold mb-8">Price</h3>
+                        <p>${stockData.price.toFixed(2)}</p>
+                    </div>
+                    <div>
+                        <h3 className="text-lg font-semibold mb-1">Market Cap</h3>
                         <p>
                             ${(stockData.mktCap / 1e9).toLocaleString(undefined, { 
                                 minimumFractionDigits: 2,
@@ -288,28 +302,22 @@ return (
                         </p>
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Volume Average</h3>
-                        <p>{stockData.volAvg}</p>
+                        <h3 className="text-lg font-semibold mb-1">Avg Volume</h3>
+                        <p>{(stockData.volAvg / 1e4).toFixed(1)}M</p>
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Beta</h3>
+                        <h3 className="text-lg font-semibold mb-8">Beta</h3>
                         <p>{stockData.beta}</p>
                     </div>
                     <div>
-                        <h3 className="text-lg font-semibold mb-2">Exchange</h3>
+                        <h3 className="text-lg font-semibold mb-8">Exchange</h3>
                         <p>{stockData.exchange}</p>
                     </div>
-                    <div>
-                        <h3 className="text-lg font-semibold mb-2">Year High</h3>
-                        <p>{stockData.yearHigh}</p>
-                    </div>
-                    <div>
-                        <h3 className="text-lg font-semibold mb-2">Year Low</h3>
-                        <p>{stockData.yearLow}</p>
-                    </div>
+                    
                 </div>
             </div>
         </div>
     </div>
-);
-    }
+    </SecureRoute>
+    );
+}

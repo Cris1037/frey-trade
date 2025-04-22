@@ -1,4 +1,3 @@
-
 //app/sign-up/page.js
 "use client";
 
@@ -18,38 +17,90 @@ export default function SignUp() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  const handleSignUp = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
+  // app/sign-up/page.js (updated handler)
+const handleSignUp = async (e) => {
+  e.preventDefault();
+  setLoading(true);
+  setError(null);
 
+  try {
     // 1) Supabase Auth signUp
-    const {
-      data: { user },
-      error: signUpError,
-    } = await supabase.auth.signUp({ email, password });
-    if (signUpError) {
-      setError(signUpError.message);
-      setLoading(false);
-      return;
+    const { data: { user }, error: authError } = 
+      await supabase.auth.signUp({ email, password });
+    
+    if (authError) throw authError;
+
+    // 2) Create user profile via API route
+    const response = await fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        id: user.id,
+        email,
+        first_name,
+        last_name,
+        security_question: secQ,
+        security_answer: secA
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.error);
     }
 
-    await supabase
-    .from('accounts')
-    .upsert({ user_id: user.id }, { onConflict: 'user_id' });
-    setLoading(false);
     router.replace("../home");
-  };
-
-  const handleGoogleSignUp = async () => {
-    setLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: window.location.origin + "../home" },
-    });
+  } catch (error) {
+    setError(error.message);
+  } finally {
     setLoading(false);
-    if (error) setError(error.message);
-  };
+  }
+};
+
+const handleGoogleSignUp = async () => {
+  try {
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: window.location.origin + "/home",
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    });
+
+    if (error) throw error;
+
+    // After successful Google auth, create user profile
+    if (data?.user) {
+      const { id, email, user_metadata } = data.user;
+      const firstName = user_metadata?.full_name?.split(' ')[0] || '';
+      const lastName = user_metadata?.full_name?.split(' ').slice(1).join(' ') || '';
+
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          email,
+          first_name: firstName,
+          last_name: lastName
+          // Security Q&A defaults handled by API
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error);
+      }
+    }
+    
+    router.replace("/home");
+  } catch (error) {
+    setError(error.message);
+  }
+};
 
   return (
     <div className="bg-[#46708D] h-screen flex flex-col justify-center items-center">
@@ -135,4 +186,5 @@ export default function SignUp() {
       </main>
     </div>
   );
+
 }
