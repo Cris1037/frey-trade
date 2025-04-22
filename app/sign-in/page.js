@@ -16,7 +16,7 @@ export default function SignIn() {
   // Redirect if already signed in
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.replace("../home");
+      if (session) router.push("https://frey-trade.vercel.app/home");
     });
   }, [router]);
 
@@ -34,7 +34,7 @@ export default function SignIn() {
     if (signInError) {
       setError(signInError.message);
     } else {
-      router.replace("../home");
+      router.push("https://frey-trade.vercel.app/home");
     }
   };
 
@@ -42,7 +42,7 @@ export default function SignIn() {
     setLoading(true);
     const { error: oauthError } = await supabase.auth.signInWithOAuth({
       provider: "google",
-      options: { redirectTo: window.location.origin + "../home" },
+      options: { redirectTo: window.location.origin + "/home" },
     });
     setLoading(false);
     if (oauthError) setError(oauthError.message);
@@ -106,14 +106,14 @@ export default function SignIn() {
 
         <p className="text-[#C4BB96]">DON’T HAVE AN ACCOUNT?</p>
         <button
-          onClick={() => router.push("/sign-up")}
+          onClick={() => router.push("https://frey-trade.vercel.app/sign-up")}
           className="text-[#C4BB96] border-b mt-2"
         >
           SIGN UP
         </button>
         <div className="w-full border-t border-[#C4BB96] my-2" />
         <button
-          onClick={() => router.push("/forgot-password")}
+          onClick={() => router.push("https://frey-trade.vercel.app/forgot-password")}
           className="text-[#C4BB96] border-b mt-2">
           FORGOT PASSWORD?
           </button>

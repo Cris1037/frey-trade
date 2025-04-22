@@ -1,5 +1,5 @@
 // app/page.jsx
 import { redirect } from "next/navigation";
 export default function Page() {
-  redirect("/sign-in");
+  redirect("https://frey-trade.vercel.app/sign-in");
 }

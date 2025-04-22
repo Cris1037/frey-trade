@@ -31,7 +31,7 @@ const handleSignUp = async (e) => {
     if (authError) throw authError;
 
     // 2) Create user profile via API route
-    const response = await fetch('/api/users', {
+    const response = await fetch('https://frey-trade.vercel.app/api/users', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -78,7 +78,7 @@ const handleGoogleSignUp = async () => {
       const firstName = user_metadata?.full_name?.split(' ')[0] || '';
       const lastName = user_metadata?.full_name?.split(' ').slice(1).join(' ') || '';
 
-      const response = await fetch('/api/users', {
+      const response = await fetch('https://frey-trade.vercel.app/api/users', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -96,7 +96,7 @@ const handleGoogleSignUp = async () => {
       }
     }
     
-    router.replace("/home");
+    router.push("https://frey-trade.vercel.app/home");
   } catch (error) {
     setError(error.message);
   }

@@ -26,7 +26,7 @@ export default function StockPage() {
         setLoading(true);
   
         // Fetch stock profile
-        const profileRes = await fetch(`/api/stock-profile?symbol=${symbol}`);
+        const profileRes = await fetch(`https://frey-trade.vercel.app/api/stock-profile?symbol=${symbol}`);
         if (!profileRes.ok) {
           const errorData = await profileRes.json();
           throw new Error(errorData.error || 'Failed to fetch profile');
@@ -34,7 +34,7 @@ export default function StockPage() {
         const profileData = await profileRes.json();
   
         // Fetch historical data
-        const historicalRes = await fetch(`/api/market-data?symbol=${symbol}`);
+        const historicalRes = await fetch(`https://frey-trade.vercel.app/api/market-data?symbol=${symbol}`);
         if (!historicalRes.ok) {
           const errorData = await historicalRes.json();
           throw new Error(errorData.error || 'Failed to fetch historical data');
@@ -125,7 +125,7 @@ export default function StockPage() {
       
         try {
           // 1. Get fresh price data from FMP API
-          const profileRes = await fetch(`/api/stock-profile?symbol=${symbol}`);
+          const profileRes = await fetch(`https://frey-trade.vercel.app/api/stock-profile?symbol=${symbol}`);
           if (!profileRes.ok) throw new Error('Failed to fetch stock data');
           const stockProfile = await profileRes.json();
           const currentPrice = stockProfile.price;
@@ -233,7 +233,7 @@ return (
     <SecureRoute>
     <div className=" min-h-screen flex justify-center items-center"> {/* Main container */}
     <button
-        onClick={() => router.push('/home')}
+        onClick={() => router.push('https://frey-trade.vercel.app/home')}
         className="absolute top-4 left-4 bg-[#A57730] text-black px-4 py-2 rounded hover:bg-[#C4BB96] transition-colors"
     >
         Back

@@ -12,7 +12,7 @@ export default function StockSearch() {
   // components/StockSearch.jsx
 const searchStocks = async (searchQuery) => {
     try {
-      const res = await fetch(`/api/search?query=${searchQuery}`);
+      const res = await fetch(`https://frey-trade.vercel.app/api/search?query=${searchQuery}`);
       const data = await res.json();
       
       // Transform profile response to search format

@@ -22,7 +22,7 @@ export default function Home() {
   const handleStockSelect = async (symbol) => {
     try {
       setSelectedStock(symbol);
-      const res = await fetch(`/api/market-data?symbol=${symbol}`);
+      const res = await fetch(`https://frey-trade.vercel.app/api/market-data?symbol=${symbol}`);
       const chartData = await res.json();
       setChartData(chartData);
     } catch (error) {
@@ -76,7 +76,7 @@ export default function Home() {
       const portfolioData = await Promise.all(
         holdingsData.map(async (holding) => {
           try {
-            const res = await fetch(`/api/stock-profile?symbol=${holding.stock_symbol}`);
+            const res = await fetch(`https://frey-trade.vercel.app/api/stock-profile?symbol=${holding.stock_symbol}`);
             if (!res.ok) throw new Error('Price fetch failed');
             const { price } = await res.json();
             return {
@@ -104,7 +104,7 @@ export default function Home() {
       // Fetch chart data if valid holdings exist
       if (validHoldings.length > 0) {
         const targetSymbol = selectedStock || validHoldings[0].ticker;
-        const res = await fetch(`/api/market-data?symbol=${targetSymbol}`);
+        const res = await fetch(`https://frey-trade.vercel.app/api/market-data?symbol=${targetSymbol}`);
         if (res.ok) {
           setChartData(await res.json());
         }
@@ -149,7 +149,7 @@ export default function Home() {
         setLoading(false);
         fetchPortfolio(session.user.id);
       } else {
-        router.replace("/sign-in");
+        router.push("https://frey-trade.vercel.app/sign-in");
       }
     };
 
@@ -159,7 +159,7 @@ export default function Home() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
-    router.push("/sign-in");
+    router.push("https://frey-trade.vercel.app/sign-in");
   };
 
   if (loading) return <div className="p-8">Loading...</div>;

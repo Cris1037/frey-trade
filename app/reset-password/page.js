@@ -19,7 +19,7 @@ export default function ResetPassword() {
       const { data, error } = await supabase.auth.exchangeCodeForSession();
       if (error) {
         // Not a valid recovery flow—kick them out
-        router.replace("/sign-in");
+        router.replace("https://frey-trade.vercel.app/sign-in");
       } else {
         // We have a session from the recovery link
         setPhase("ready");
