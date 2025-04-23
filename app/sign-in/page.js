@@ -15,10 +15,16 @@ export default function SignIn() {
 
   // Redirect if already signed in
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) router.push("https://frey-trade.vercel.app/home");
-    });
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        if (event === "SIGNED_IN") {
+          router.push("/home");
+        }
+      }
+    );
+    return () => listener.subscription.unsubscribe();
   }, [router]);
+  
 
   const handleEmailSignIn = async (e) => {
     e.preventDefault();

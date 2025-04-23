@@ -12,7 +12,6 @@ export default function ResetPassword() {
   const [confirmPwd, setConfirmPwd] = useState("");
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
-  const [user, setUser] = useState(null);
   const [securityQuestion, setSecurityQuestion] = useState("");
   const [securityAnswer, setSecurityAnswer] = useState("");
   const [providedAnswer, setProvidedAnswer] = useState("");
@@ -72,8 +71,9 @@ export default function ResetPassword() {
     if (updateError) {
       setError(updateError.message);
     } else {
-      setMessage("Password updated! Redirecting to sign‑in…");
-      setTimeout(() => router.replace("https://frey-trade.vercel.app/sign-up"), 3000);
+      setMessage("Password updated! Redirecting to sign-in…");
+      await supabase.auth.signOut();
+      router.replace("/sign-in");
     }
   };
 
