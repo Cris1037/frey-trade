@@ -13,17 +13,9 @@ export default function SignIn() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // Redirect if already signed in
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        if (event === "SIGNED_IN") {
-          router.push("/home");
-        }
-      }
-    );
-    return () => sub.subscription.unsubscribe();
-  }, [router]);
+    supabase.auth.signOut();
+  }, []);
   
   
 
