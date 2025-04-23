@@ -113,11 +113,11 @@ export default function SignIn() {
           SIGN UP
         </button>
         <div className="w-full border-t border-[#C4BB96] my-2" />
-        <button
+        {/* <button
           onClick={() => router.push("https://frey-trade.vercel.app/forgot-password")}
           className="text-[#C4BB96] border-b mt-2">
           FORGOT PASSWORD?
-          </button>
+          </button> */}
       </main>
     </div>
   );
