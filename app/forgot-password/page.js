@@ -16,7 +16,7 @@ export default function ForgotPassword() {
     setMessage("");
 
     await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${window.location.origin}/reset-password`
+      redirectTo: 'https://frey-trade.vercel.app/reset-password',
     });
 
     if (error) {

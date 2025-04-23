@@ -19,27 +19,21 @@ export default function ResetPassword() {
   const [message, setMessage] = useState("");
 
   useEffect(() => {
-    console.log("URL full:", window.location.href);
-    console.log("Hash fragment:", window.location.hash);
-
     async function verifyLink() {
       try {
-        const {
-          data: { session },
-          error,
-        } = await supabase.auth.getSessionFromUrl({ storeSession: true });
-        if (error || !session) {
-          throw error || new Error("No session");
-        }
+        const result = await supabase.auth.getSessionFromUrl({ storeSession: true });
+        console.log("Recovery result:", result);
+        const { data: { session }, error } = result;
+        if (error || !session) throw error || new Error("No session found");
         setSession(session);
         setPhase("ready");
       } catch (err) {
-        console.error("Recovery link error:", err);
+        console.error("Link verification failed:", err);
         setError("Invalid or expired recovery link.");
         setPhase("error");
       }
     }
-
+  
     verifyLink();
   }, []);
 
