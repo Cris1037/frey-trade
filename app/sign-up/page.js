@@ -26,8 +26,10 @@ const handleSignUp = async (e) => {
   try {
     // 1) Supabase Auth signUp
     const { data: { user }, error: authError } = 
-      await supabase.auth.signUp({ email, password });
-    
+      await supabase.auth.signUp({ email, password },
+        {emailRedirectTo: `${window.location.origin}/verify`}
+      );
+
     if (authError) throw authError;
 
     // 2) Create user profile via API route

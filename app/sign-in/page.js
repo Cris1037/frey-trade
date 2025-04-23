@@ -15,15 +15,16 @@ export default function SignIn() {
 
   // Redirect if already signed in
   useEffect(() => {
-    const { data: listener } = supabase.auth.onAuthStateChange(
+    const { data: sub } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "SIGNED_IN") {
           router.push("/home");
         }
       }
     );
-    return () => listener.subscription.unsubscribe();
+    return () => sub.subscription.unsubscribe();
   }, [router]);
+  
   
 
   const handleEmailSignIn = async (e) => {
