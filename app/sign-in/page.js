@@ -30,11 +30,13 @@ export default function SignIn() {
     });
 
     setLoading(false);
-    if (signInError) {
-      setError(signInError.message);
-    } else {
-      router.push("https://frey-trade.vercel.app/home");
+    if (!signInError) {
+      router.replace("/home");
     }
+    else {
+      setError(signInError.message);
+    }
+
   };
 
   const handleGoogleSignIn = async () => {
