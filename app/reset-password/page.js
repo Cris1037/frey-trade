@@ -7,7 +7,7 @@ import { supabase } from "../_utils/supabase-client";
 
 export default function ResetPassword() {
   const router = useRouter();
-  const [phase, setPhase] = useState("loading"); // loading → ready
+  const [phase, setPhase] = useState("loading"); 
   const [newPwd, setNewPwd] = useState("");
   const [confirmPwd, setConfirmPwd] = useState("");
   const [error, setError] = useState("");
@@ -68,12 +68,12 @@ export default function ResetPassword() {
     const { error: updateError } = await supabase.auth.updateUser({
       password: newPwd,
     });
-    if (updateError) {
-      setError(updateError.message);
-    } else {
+    if (!updateError) {
       setMessage("Password updated! Redirecting to sign-in…");
       await supabase.auth.signOut();
       router.replace("/sign-in");
+    } else {
+      setError(updateError.message);
     }
   };
 
@@ -85,7 +85,7 @@ export default function ResetPassword() {
         <input
           type="text"
           placeholder="Security answer"
-          className="w-full p-3 rounded border-2 border-[#A57730] mb-4 text-center text-[#C4BB96] placeholder-[#C4BB96]"
+          className="w-300 p-3 rounded border-2 border-[#A57730] mb-4 text-center text-[#C4BB96] placeholder-[#C4BB96]"
           value={providedAnswer}
           onChange={(e) => setProvidedAnswer(e.target.value)}
           required
@@ -93,7 +93,7 @@ export default function ResetPassword() {
         <input
           type="password"
           placeholder="New password"
-          className="w-full p-3 rounded border-2 border-[#A57730] mb-4 text-center text-[#C4BB96] placeholder-[#C4BB96]"
+          className="w-300 p-3 rounded border-2 border-[#A57730] mb-4 text-center text-[#C4BB96] placeholder-[#C4BB96]"
           value={newPwd}
           onChange={(e) => setNewPwd(e.target.value)}
           required
@@ -101,14 +101,14 @@ export default function ResetPassword() {
         <input
           type="password"
           placeholder="Confirm password"
-          className="w-full p-3 rounded border-2 border-[#A57730] mb-4 text-center text-[#C4BB96] placeholder-[#C4BB96]"
+          className="w-300 p-3 rounded border-2 border-[#A57730] mb-4 text-center text-[#C4BB96] placeholder-[#C4BB96]"
           value={confirmPwd}
           onChange={(e) => setConfirmPwd(e.target.value)}
           required
         />
         <button
           type="submit"
-          className="w-full bg-[#A57730] py-2 rounded font-bold text-black"
+          className="w-300 bg-[#A57730] py-2 rounded font-bold text-black"
         >
           Reset password
         </button>
