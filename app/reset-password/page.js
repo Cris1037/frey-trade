@@ -1,4 +1,5 @@
 // app/reset-password/page.jsx
+export const dynamic = "force-dynamic";
 "use client";
 
 import { useEffect, useState } from "react";
@@ -17,39 +18,41 @@ export default function ResetPassword() {
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
 
-  // 1) On mount, log the URL & hash and try to consume the magic-link token
   useEffect(() => {
-    console.log("Reset page URL:", window.location.href);
-    console.log("URL hash fragment:", window.location.hash);
+    console.log("URL full:", window.location.href);
+    console.log("Hash fragment:", window.location.hash);
 
     async function verifyLink() {
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSessionFromUrl({ storeSession: true });
-      if (error || !session) {
+      try {
+        const {
+          data: { session },
+          error,
+        } = await supabase.auth.getSessionFromUrl({ storeSession: true });
+        if (error || !session) {
+          throw error || new Error("No session");
+        }
+        setSession(session);
+        setPhase("ready");
+      } catch (err) {
+        console.error("Recovery link error:", err);
         setError("Invalid or expired recovery link.");
         setPhase("error");
-        return;
       }
-      setSession(session);
-      setPhase("ready");
     }
 
     verifyLink();
   }, []);
 
-  // 2) Once session is ready, fetch security question
   useEffect(() => {
     if (phase !== "ready" || !session) return;
     async function loadQuestion() {
-      const userId = session.user.id;
       const { data, error } = await supabase
         .from("users")
         .select("security_question, security_answer")
-        .eq("id", userId)
+        .eq("id", session.user.id)
         .single();
       if (error) {
+        console.error("Load question error:", error);
         setError("Failed to load security question.");
       } else {
         setSecurityQuestion(data.security_question);
@@ -62,7 +65,6 @@ export default function ResetPassword() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
-
     if (providedAnswer !== securityAnswer) {
       setError("Security answer is incorrect.");
       return;
@@ -71,35 +73,30 @@ export default function ResetPassword() {
       setError("Passwords do not match.");
       return;
     }
-
     const { error: updateErr } = await supabase.auth.updateUser({
       password: newPwd,
     });
     if (updateErr) {
       setError(updateErr.message);
     } else {
-      setMessage("Password updated! Redirecting to sign-in…");
-      // clear session so user must sign in again
+      setMessage("Password updated! Redirecting…");
       await supabase.auth.signOut();
       setTimeout(() => router.replace("/sign-in"), 2000);
     }
   };
 
-  if (phase === "verifying") {
+  if (phase === "verifying")
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#46708D]">
-        <p className="text-[#C4BB96]">Verifying recovery link…</p>
+        <p className="text-[#C4BB96]">Verifying link…</p>
       </div>
     );
-  }
-
-  if (phase === "error") {
+  if (phase === "error")
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#46708D]">
         <p className="text-red-400">{error}</p>
       </div>
     );
-  }
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#46708D] p-4">
@@ -110,7 +107,7 @@ export default function ResetPassword() {
             <p className="text-[#C4BB96] mb-2">{securityQuestion}</p>
             <input
               type="text"
-              placeholder="Your answer"
+              placeholder="Answer"
               className="w-full p-3 rounded border-2 border-[#A57730] mb-4 text-center text-[#C4BB96]"
               value={providedAnswer}
               onChange={(e) => setProvidedAnswer(e.target.value)}
