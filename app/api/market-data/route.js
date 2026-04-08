@@ -1,38 +1,16 @@
-// app/api/market-data/route.js
+import { fetchMarketData } from "@/utils/fmp-cache";
+import { validateSymbolParam } from "@/utils/validation";
+
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const symbol = searchParams.get('symbol');
+  const { value: symbol, error } = validateSymbolParam(request);
+  if (error) return error;
 
   try {
-    const response = await fetch(
-      `https://financialmodelingprep.com/api/v3/historical-price-full/${symbol}?apikey=${process.env.FMP_API_KEY}`
-    );
-
-    if (!response.ok) {
-      return new Response(JSON.stringify({ 
-        error: `FMP API Error: ${response.statusText}` 
-      }), { 
-        status: response.status 
-      });
-    }
-
-    const data = await response.json();
-    const chartData = data.historical?.map(item => ({
-      time: item.date,
-      open: item.open,
-      high: item.high,
-      low: item.low,
-      close: item.close,
-      volume: item.volume
-    })) || [];
-
-    return new Response(JSON.stringify(chartData.reverse()), {
-      headers: { 'Content-Type': 'application/json' }
+    const chartData = await fetchMarketData(symbol);
+    return new Response(JSON.stringify(chartData), {
+      headers: { "Content-Type": "application/json" },
     });
-
-  } catch (error) {
-    return new Response(JSON.stringify({ 
-      error: error.message || 'Failed to fetch market data'
-    }), { status: 500 });
+  } catch (err) {
+    return new Response(JSON.stringify({ error: err.message || "Failed to fetch market data" }), { status: 500 });
   }
 }

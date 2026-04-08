@@ -1,49 +1,58 @@
-//components/trading-chart.jsx
 'use client';
 import { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';
 
 export default function TradingChart({ data }) {
-  const chartContainerRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
-    if (!chartContainerRef.current || !data?.length) return;
+    if (!containerRef.current || !data?.length) return;
 
-    const chart = createChart(chartContainerRef.current, {
-      width: 1075,
-      height: 500,
+    const chart = createChart(containerRef.current, {
+      width: containerRef.current.clientWidth,
+      height: 380,
       layout: {
-        background: { color: '#123A41' },
-        textColor: '#C4BB96',
+        background: { color: 'transparent' },
+        textColor: '#94A3B8',
       },
       grid: {
-        vertLines: { color: '#C4BB96' },
-        horzLines: { color: '#C4BB96' },
+        vertLines: { color: 'rgba(59,130,246,0.08)' },
+        horzLines: { color: 'rgba(59,130,246,0.08)' },
+      },
+      crosshair: { mode: 1 },
+      rightPriceScale: {
+        borderColor: 'rgba(30,58,95,0.5)',
+      },
+      timeScale: {
+        borderColor: 'rgba(30,58,95,0.5)',
+        timeVisible: true,
       },
     });
 
     const candlestickSeries = chart.addCandlestickSeries({
-      upColor: '#48BB78',
-      downColor: '#FC8181',
-      wickUpColor: '#48BB78',
-      wickDownColor: '#FC8181',
+      upColor: '#10B981',
+      downColor: '#EF4444',
+      borderUpColor: '#10B981',
+      borderDownColor: '#EF4444',
+      wickUpColor: '#10B981',
+      wickDownColor: '#EF4444',
     });
 
     candlestickSeries.setData(data);
+    chart.timeScale().fitContent();
 
-    const resizeHandler = () => {
-      chart.applyOptions({
-        width: chartContainerRef.current.clientWidth
-      });
-    };
-
-    window.addEventListener('resize', resizeHandler);
+    const observer = new ResizeObserver(() => {
+      if (containerRef.current) {
+        chart.applyOptions({ width: containerRef.current.clientWidth });
+      }
+    });
+    observer.observe(containerRef.current);
 
     return () => {
-      window.removeEventListener('resize', resizeHandler);
+      observer.disconnect();
       chart.remove();
     };
   }, [data]);
 
-  return <div ref={chartContainerRef} className="w-[1075px] h-[500px]" />;
+  return <div ref={containerRef} className="w-full h-[380px]" />;
 }

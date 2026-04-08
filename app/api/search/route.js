@@ -1,17 +1,14 @@
-// app/api/search/route.js
+import { fetchSearchResults } from "@/utils/fmp-cache";
+import { validateQueryParam } from "@/utils/validation";
+
 export async function GET(request) {
-  const { searchParams } = new URL(request.url);
-  const query = searchParams.get('query');
+  const { value: query, error } = validateQueryParam(request);
+  if (error) return error;
 
   try {
-    const response = await fetch(
-      `https://financialmodelingprep.com/api/v3/search?query=${query}&apikey=${process.env.FMP_API_KEY}`
-    );
-    const data = await response.json();
+    const data = await fetchSearchResults(query);
     return new Response(JSON.stringify(data));
-  } catch (error) {
-    return new Response(JSON.stringify({ 
-      error: 'Failed to fetch search results'
-    }), { status: 500 });
+  } catch {
+    return new Response(JSON.stringify({ error: "Failed to fetch search results" }), { status: 500 });
   }
 }
