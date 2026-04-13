@@ -7,7 +7,8 @@ export async function GET(request) {
 
   try {
     const data = await fetchSearchResults(query);
-    return new Response(JSON.stringify(data));
+    const stocks = Array.isArray(data) ? data.filter((item) => item.type === "stock") : [];
+    return new Response(JSON.stringify(stocks));
   } catch {
     return new Response(JSON.stringify({ error: "Failed to fetch search results" }), { status: 500 });
   }
