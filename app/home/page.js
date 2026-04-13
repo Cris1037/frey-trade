@@ -6,7 +6,7 @@ import { auth, db } from "../_utils/firebase-client";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import {
   collection, query, where, getDocs,
-  doc, getDoc, setDoc, updateDoc, addDoc,
+  doc, getDoc, setDoc, updateDoc, addDoc, deleteDoc,
 } from "firebase/firestore";
 import Image from "next/image";
 import TradingChart from "../../components/trading-chart";
@@ -32,14 +32,33 @@ export default function Home() {
   const [quantity, setQuantity] = useState(1);
   const [transacting, setTransacting] = useState(false);
 
+  // Profile
+  const [userProfile, setUserProfile] = useState({ first_name: "", last_name: "" });
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [editFirstName, setEditFirstName] = useState("");
+  const [editLastName, setEditLastName] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [resetting, setResetting] = useState(false);
+
+  // Mobile sidebar
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
   // ── Portfolio fetch ────────────────────────────────────────────
   const fetchPortfolio = useCallback(async (userId) => {
     try {
-      const snap = await getDocs(query(collection(db, "holdings"), where("user_id", "==", userId)));
-      const holdingsData = snap.docs.map((d) => d.data());
+      const [snap, accountSnap, userSnap] = await Promise.all([
+        getDocs(query(collection(db, "holdings"), where("user_id", "==", userId))),
+        getDoc(doc(db, "accounts", userId)),
+        getDoc(doc(db, "users", userId)),
+      ]);
 
-      const accountSnap = await getDoc(doc(db, "accounts", userId));
       if (accountSnap.exists()) setAccountBalance(accountSnap.data().balance);
+      if (userSnap.exists()) {
+        const data = userSnap.data();
+        setUserProfile({ first_name: data.first_name || "", last_name: data.last_name || "" });
+      }
+
+      const holdingsData = snap.docs.map((d) => d.data());
 
       const resolved = await Promise.all(
         holdingsData.map(async (h) => {
@@ -76,6 +95,7 @@ export default function Home() {
     setStockLoading(true);
     setStockError(null);
     setQuantity(1);
+    setSidebarOpen(false);
 
     try {
       const [profileRes, histRes] = await Promise.all([
@@ -194,9 +214,60 @@ export default function Home() {
     }
   };
 
+  // ── Save profile ───────────────────────────────────────────────
+  const handleSaveProfile = async () => {
+    if (!user) return;
+    setSavingProfile(true);
+    try {
+      await updateDoc(doc(db, "users", user.uid), {
+        first_name: editFirstName.trim(),
+        last_name: editLastName.trim(),
+      });
+      setUserProfile({ first_name: editFirstName.trim(), last_name: editLastName.trim() });
+      setProfileOpen(false);
+    } catch (err) {
+      alert(`Failed to save: ${err.message}`);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  // ── Reset simulation ───────────────────────────────────────────
+  const handleResetSimulation = async () => {
+    if (!user) return;
+    if (!confirm("Reset your entire simulation? This will delete all holdings and transactions and restore your balance to $100,000. This cannot be undone.")) return;
+    setResetting(true);
+    try {
+      const [holdingsSnap, txSnap] = await Promise.all([
+        getDocs(query(collection(db, "holdings"), where("user_id", "==", user.uid))),
+        getDocs(query(collection(db, "transactions"), where("user_id", "==", user.uid))),
+      ]);
+      await Promise.all([
+        ...holdingsSnap.docs.map((d) => deleteDoc(d.ref)),
+        ...txSnap.docs.map((d) => deleteDoc(d.ref)),
+        updateDoc(doc(db, "accounts", user.uid), { balance: 100000 }),
+      ]);
+      setPortfolio([]);
+      setTotalValue(0);
+      setAccountBalance(100000);
+      setCurrentShares(0);
+      setProfileOpen(false);
+    } catch (err) {
+      alert(`Reset failed: ${err.message}`);
+    } finally {
+      setResetting(false);
+    }
+  };
+
   const handleSignOut = async () => {
     await signOut(auth);
     router.push("/sign-in");
+  };
+
+  const openProfile = () => {
+    setEditFirstName(userProfile.first_name);
+    setEditLastName(userProfile.last_name);
+    setProfileOpen(true);
   };
 
   // ── Loading screen ─────────────────────────────────────────────
@@ -216,7 +287,18 @@ export default function Home() {
     <div className="h-screen bg-[#060B18] text-[#E2E8F0] flex flex-col overflow-hidden">
 
       {/* ── Navbar ── */}
-      <nav className="h-16 shrink-0 bg-[#0D1626]/80 backdrop-blur-xl border-b border-[#1E3A5F]/40 flex items-center px-5 gap-4 z-50">
+      <nav className="h-16 shrink-0 bg-[#0D1626]/80 backdrop-blur-xl border-b border-[#1E3A5F]/40 flex items-center px-5 gap-4 z-50 relative">
+        {/* Hamburger — mobile only */}
+        <button
+          onClick={() => setSidebarOpen((o) => !o)}
+          className="md:hidden p-2 rounded-lg hover:bg-[#1E3A5F]/40 transition-all shrink-0"
+          aria-label="Toggle sidebar"
+        >
+          <svg className="w-5 h-5 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+
         <div className="flex items-center gap-2.5 shrink-0">
           <Image src="/assets/3384357_57661.svg" alt="Logo" width={30} height={30} priority className="drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
           <span className="font-bold text-base bg-gradient-to-r from-[#60A5FA] to-[#D4AF37] bg-clip-text text-transparent hidden sm:block">
@@ -229,6 +311,11 @@ export default function Home() {
         </div>
 
         <div className="flex items-center gap-4 ml-auto shrink-0">
+          {userProfile.first_name && (
+            <span className="hidden sm:block text-sm text-[#94A3B8]">
+              Welcome, <span className="text-[#E2E8F0] font-medium">{userProfile.first_name}</span>
+            </span>
+          )}
           <div className="hidden lg:flex flex-col items-end">
             <span className="text-[11px] text-[#475569] uppercase tracking-wider">Portfolio</span>
             <span className="font-semibold text-sm text-[#E2E8F0]">
@@ -241,6 +328,16 @@ export default function Home() {
               ${accountBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
           </div>
+          {/* Profile button */}
+          <button
+            onClick={openProfile}
+            className="w-8 h-8 bg-[#1E3A5F]/50 hover:bg-[#1E3A5F] border border-[#1E3A5F] rounded-full flex items-center justify-center transition-all"
+            aria-label="Profile"
+          >
+            <svg className="w-4 h-4 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+            </svg>
+          </button>
           <button
             onClick={handleSignOut}
             className="bg-[#EF4444]/10 hover:bg-[#EF4444]/20 border border-[#EF4444]/25 text-[#EF4444] px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
@@ -251,10 +348,26 @@ export default function Home() {
       </nav>
 
       {/* ── Body ── */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
+
+        {/* Mobile sidebar backdrop */}
+        {sidebarOpen && (
+          <div
+            className="fixed inset-0 bg-black/60 z-30 md:hidden"
+            style={{ top: "4rem" }}
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
 
         {/* ── Sidebar ── */}
-        <aside className="w-64 shrink-0 bg-[#0A1020] border-r border-[#1E3A5F]/30 flex flex-col overflow-hidden">
+        <aside className={[
+          "fixed md:static top-16 md:top-auto left-0 bottom-0 md:bottom-auto",
+          "w-64 shrink-0 bg-[#0A1020] border-r border-[#1E3A5F]/30",
+          "flex flex-col overflow-hidden",
+          "z-40 md:z-auto",
+          "transition-transform duration-300 ease-in-out",
+          sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
+        ].join(" ")}>
           {/* Summary cards */}
           <div className="p-4 space-y-3 border-b border-[#1E3A5F]/30">
             <div className="bg-gradient-to-br from-[#3B82F6]/10 to-[#D4AF37]/10 border border-[#3B82F6]/15 rounded-xl p-4">
@@ -518,6 +631,73 @@ export default function Home() {
           )}
         </main>
       </div>
+
+      {/* ── Profile Modal ── */}
+      {profileOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
+          onClick={(e) => { if (e.target === e.currentTarget) setProfileOpen(false); }}
+        >
+          <div className="bg-[#0D1626] border border-[#1E3A5F]/40 rounded-2xl p-6 w-full max-w-sm shadow-[0_0_60px_rgba(59,130,246,0.1)]">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg font-bold text-[#E2E8F0]">Profile</h2>
+              <button
+                onClick={() => setProfileOpen(false)}
+                className="text-[#475569] hover:text-[#E2E8F0] transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-6">
+              <div>
+                <label className="text-[#64748B] text-xs uppercase tracking-wider block mb-1.5">First name</label>
+                <input
+                  type="text"
+                  maxLength={50}
+                  value={editFirstName}
+                  onChange={(e) => setEditFirstName(e.target.value)}
+                  className="w-full bg-[#111D35] border border-[#1E3A5F] rounded-xl px-3 py-2.5 text-[#E2E8F0] text-sm focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 transition-all"
+                />
+              </div>
+              <div>
+                <label className="text-[#64748B] text-xs uppercase tracking-wider block mb-1.5">Last name</label>
+                <input
+                  type="text"
+                  maxLength={50}
+                  value={editLastName}
+                  onChange={(e) => setEditLastName(e.target.value)}
+                  className="w-full bg-[#111D35] border border-[#1E3A5F] rounded-xl px-3 py-2.5 text-[#E2E8F0] text-sm focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 transition-all"
+                />
+              </div>
+            </div>
+
+            <button
+              onClick={handleSaveProfile}
+              disabled={savingProfile}
+              className="w-full bg-gradient-to-r from-[#3B82F6] to-[#D4AF37] text-white font-semibold py-2.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 text-sm mb-4"
+            >
+              {savingProfile ? "Saving…" : "Save Changes"}
+            </button>
+
+            <div className="border-t border-[#1E3A5F]/40 pt-4">
+              <p className="text-[#64748B] text-xs mb-3">Danger zone</p>
+              <button
+                onClick={handleResetSimulation}
+                disabled={resetting}
+                className="w-full bg-[#EF4444]/10 hover:bg-[#EF4444]/20 border border-[#EF4444]/25 text-[#EF4444] font-medium py-2.5 rounded-xl transition-all disabled:opacity-50 text-sm"
+              >
+                {resetting ? "Resetting…" : "Reset Simulation"}
+              </button>
+              <p className="text-[#3B4A60] text-xs mt-2 text-center">
+                Deletes all holdings &amp; transactions, restores $100,000
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

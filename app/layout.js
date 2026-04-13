@@ -15,6 +15,9 @@ const raleway = localFont({
 export const metadata = {
   title: "Frey Trade",
   description: "Modern stock trading platform",
+  icons: {
+    icon: [{ url: "/assets/3384357_57661.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }) {

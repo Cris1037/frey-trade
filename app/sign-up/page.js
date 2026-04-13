@@ -51,7 +51,7 @@ export default function SignUp() {
         security_question: sanitize(secQ),
         security_answer: sanitize(secA),
       });
-      await setDoc(doc(db, "accounts", user.uid), { user_id: user.uid, balance: 10000 });
+      await setDoc(doc(db, "accounts", user.uid), { user_id: user.uid, balance: 100000 });
       router.replace("/home");
     } catch (err) {
       setError(err.message);
@@ -77,7 +77,7 @@ export default function SignUp() {
           security_question: "Google authenticated user",
           security_answer: "N/A",
         });
-        await setDoc(doc(db, "accounts", user.uid), { user_id: user.uid, balance: 10000 });
+        await setDoc(doc(db, "accounts", user.uid), { user_id: user.uid, balance: 100000 });
       }
       router.replace("/home");
     } catch (err) {
@@ -101,7 +101,7 @@ export default function SignUp() {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-[#D4AF37] via-[#60A5FA] to-[#D4AF37] bg-clip-text text-transparent">
             FREY TRADE
           </h1>
-          <p className="text-[#475569] mt-2 text-sm">Start trading with $10,000 virtual cash</p>
+          <p className="text-[#475569] mt-2 text-sm">Start trading with $100,000 virtual cash</p>
         </div>
 
         {/* Card */}
