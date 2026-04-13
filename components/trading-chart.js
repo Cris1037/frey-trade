@@ -1,32 +1,36 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import { createChart } from 'lightweight-charts';
+import { useTheme } from '../app/_utils/theme-context';
 
 export default function TradingChart({ data }) {
   const containerRef = useRef(null);
+  const chartRef = useRef(null);
+  const { theme } = useTheme();
 
+  // Create / recreate chart when data changes
   useEffect(() => {
     if (!containerRef.current || !data?.length) return;
+
+    const isDark = theme !== 'light';
+    const textColor   = isDark ? '#94A3B8' : '#475569';
+    const gridColor   = isDark ? 'rgba(59,130,246,0.08)'  : 'rgba(100,116,139,0.12)';
+    const borderColor = isDark ? 'rgba(30,58,95,0.5)'     : 'rgba(203,213,225,0.8)';
 
     const chart = createChart(containerRef.current, {
       width: containerRef.current.clientWidth,
       height: 380,
       layout: {
         background: { color: 'transparent' },
-        textColor: '#94A3B8',
+        textColor,
       },
       grid: {
-        vertLines: { color: 'rgba(59,130,246,0.08)' },
-        horzLines: { color: 'rgba(59,130,246,0.08)' },
+        vertLines: { color: gridColor },
+        horzLines: { color: gridColor },
       },
       crosshair: { mode: 1 },
-      rightPriceScale: {
-        borderColor: 'rgba(30,58,95,0.5)',
-      },
-      timeScale: {
-        borderColor: 'rgba(30,58,95,0.5)',
-        timeVisible: true,
-      },
+      rightPriceScale: { borderColor },
+      timeScale: { borderColor, timeVisible: true },
     });
 
     const candlestickSeries = chart.addCandlestickSeries({
@@ -40,6 +44,7 @@ export default function TradingChart({ data }) {
 
     candlestickSeries.setData(data);
     chart.timeScale().fitContent();
+    chartRef.current = chart;
 
     const observer = new ResizeObserver(() => {
       if (containerRef.current) {
@@ -51,8 +56,24 @@ export default function TradingChart({ data }) {
     return () => {
       observer.disconnect();
       chart.remove();
+      chartRef.current = null;
     };
-  }, [data]);
+  }, [data]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Update colors when theme changes without recreating the chart
+  useEffect(() => {
+    if (!chartRef.current) return;
+    const isDark = theme !== 'light';
+    chartRef.current.applyOptions({
+      layout: { textColor: isDark ? '#94A3B8' : '#475569' },
+      grid: {
+        vertLines: { color: isDark ? 'rgba(59,130,246,0.08)' : 'rgba(100,116,139,0.12)' },
+        horzLines: { color: isDark ? 'rgba(59,130,246,0.08)' : 'rgba(100,116,139,0.12)' },
+      },
+      rightPriceScale: { borderColor: isDark ? 'rgba(30,58,95,0.5)' : 'rgba(203,213,225,0.8)' },
+      timeScale:       { borderColor: isDark ? 'rgba(30,58,95,0.5)' : 'rgba(203,213,225,0.8)' },
+    });
+  }, [theme]);
 
   return <div ref={containerRef} className="w-full h-[380px]" />;
 }

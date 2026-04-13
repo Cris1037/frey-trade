@@ -11,9 +11,11 @@ import {
 import Image from "next/image";
 import TradingChart from "../../components/trading-chart";
 import StockSearch from "../../components/stock-search";
+import { useTheme } from "../_utils/theme-context";
 
 export default function Home() {
   const router = useRouter();
+  const { theme, toggleTheme } = useTheme();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -272,10 +274,10 @@ export default function Home() {
 
   // ── Loading screen ─────────────────────────────────────────────
   if (loading) return (
-    <div className="min-h-screen bg-[#060B18] flex items-center justify-center">
+    <div className="min-h-screen bg-[var(--bg-base)] flex items-center justify-center">
       <div className="flex flex-col items-center gap-4">
-        <div className="w-10 h-10 border-2 border-[#3B82F6]/20 border-t-[#3B82F6] rounded-full animate-spin" />
-        <span className="text-[#475569] text-sm">Loading your portfolio…</span>
+        <div className="w-10 h-10 border-2 border-[var(--clr-blue)]/20 border-t-[var(--clr-blue)] rounded-full animate-spin" />
+        <span className="text-[var(--text-dim)] text-sm">Loading your portfolio…</span>
       </div>
     </div>
   );
@@ -284,24 +286,24 @@ export default function Home() {
   const portfolioGain = portfolio.reduce((s, h) => s + ((h.currentPrice - h.avgPrice) * h.shares), 0);
 
   return (
-    <div className="h-screen bg-[#060B18] text-[#E2E8F0] flex flex-col overflow-hidden">
+    <div className="h-screen bg-[var(--bg-base)] text-[var(--text-hi)] flex flex-col overflow-hidden">
 
       {/* ── Navbar ── */}
-      <nav className="h-16 shrink-0 bg-[#0D1626]/80 backdrop-blur-xl border-b border-[#1E3A5F]/40 flex items-center px-5 gap-4 z-50 relative">
+      <nav className="h-16 shrink-0 bg-[var(--bg-surface)]/80 backdrop-blur-xl border-b border-[var(--clr-border)]/40 flex items-center px-5 gap-4 z-50 relative">
         {/* Hamburger — mobile only */}
         <button
           onClick={() => setSidebarOpen((o) => !o)}
-          className="md:hidden p-2 rounded-lg hover:bg-[#1E3A5F]/40 transition-all shrink-0"
+          className="md:hidden p-2 rounded-lg hover:bg-[var(--clr-border)]/40 transition-all shrink-0"
           aria-label="Toggle sidebar"
         >
-          <svg className="w-5 h-5 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="w-5 h-5 text-[var(--text-md)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
           </svg>
         </button>
 
         <div className="flex items-center gap-2.5 shrink-0">
           <Image src="/assets/3384357_57661.svg" alt="Logo" width={30} height={30} priority className="drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]" />
-          <span className="font-bold text-base bg-gradient-to-r from-[#60A5FA] to-[#D4AF37] bg-clip-text text-transparent hidden sm:block">
+          <span className="font-bold text-base bg-gradient-to-r from-[var(--clr-blue-lt)] to-[var(--clr-gold)] bg-clip-text text-transparent hidden sm:block">
             FREY TRADE
           </span>
         </div>
@@ -310,37 +312,38 @@ export default function Home() {
           <StockSearch onSelect={selectStock} />
         </div>
 
-        <div className="flex items-center gap-4 ml-auto shrink-0">
+        <div className="flex items-center gap-3 ml-auto shrink-0">
           {userProfile.first_name && (
-            <span className="hidden sm:block text-sm text-[#94A3B8]">
-              Welcome, <span className="text-[#E2E8F0] font-medium">{userProfile.first_name}</span>
+            <span className="hidden sm:block text-sm text-[var(--text-md)]">
+              Welcome, <span className="text-[var(--text-hi)] font-medium">{userProfile.first_name}</span>
             </span>
           )}
           <div className="hidden lg:flex flex-col items-end">
-            <span className="text-[11px] text-[#475569] uppercase tracking-wider">Portfolio</span>
-            <span className="font-semibold text-sm text-[#E2E8F0]">
+            <span className="text-[11px] text-[var(--text-dim)] uppercase tracking-wider">Portfolio</span>
+            <span className="font-semibold text-sm text-[var(--text-hi)]">
               ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
           </div>
           <div className="hidden md:flex flex-col items-end">
-            <span className="text-[11px] text-[#475569] uppercase tracking-wider">Cash</span>
-            <span className="font-semibold text-sm text-[#10B981]">
+            <span className="text-[11px] text-[var(--text-dim)] uppercase tracking-wider">Cash</span>
+            <span className="font-semibold text-sm text-[var(--clr-green)]">
               ${accountBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
             </span>
           </div>
+
           {/* Profile button */}
           <button
             onClick={openProfile}
-            className="w-8 h-8 bg-[#1E3A5F]/50 hover:bg-[#1E3A5F] border border-[#1E3A5F] rounded-full flex items-center justify-center transition-all"
+            className="w-8 h-8 bg-[var(--clr-border)]/50 hover:bg-[var(--clr-border)] border border-[var(--clr-border)] rounded-full flex items-center justify-center transition-all"
             aria-label="Profile"
           >
-            <svg className="w-4 h-4 text-[#94A3B8]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <svg className="w-4 h-4 text-[var(--text-md)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
             </svg>
           </button>
           <button
             onClick={handleSignOut}
-            className="bg-[#EF4444]/10 hover:bg-[#EF4444]/20 border border-[#EF4444]/25 text-[#EF4444] px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
+            className="bg-[var(--clr-red)]/10 hover:bg-[var(--clr-red)]/20 border border-[var(--clr-red)]/25 text-[var(--clr-red)] px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
           >
             Sign Out
           </button>
@@ -362,34 +365,34 @@ export default function Home() {
         {/* ── Sidebar ── */}
         <aside className={[
           "fixed md:static top-16 md:top-auto left-0 bottom-0 md:bottom-auto",
-          "w-64 shrink-0 bg-[#0A1020] border-r border-[#1E3A5F]/30",
+          "w-64 shrink-0 bg-[var(--bg-sidebar)] border-r border-[var(--clr-border)]/30",
           "flex flex-col overflow-hidden",
           "z-40 md:z-auto",
           "transition-transform duration-300 ease-in-out",
           sidebarOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0",
         ].join(" ")}>
           {/* Summary cards */}
-          <div className="p-4 space-y-3 border-b border-[#1E3A5F]/30">
-            <div className="bg-gradient-to-br from-[#3B82F6]/10 to-[#D4AF37]/10 border border-[#3B82F6]/15 rounded-xl p-4">
-              <p className="text-[#64748B] text-[11px] uppercase tracking-wider mb-1">Total Value</p>
-              <p className="text-2xl font-bold text-[#E2E8F0]">
+          <div className="p-4 space-y-3 border-b border-[var(--clr-border)]/30">
+            <div className="bg-gradient-to-br from-[var(--clr-blue)]/10 to-[var(--clr-gold)]/10 border border-[var(--clr-blue)]/15 rounded-xl p-4">
+              <p className="text-[var(--text-lo)] text-[11px] uppercase tracking-wider mb-1">Total Value</p>
+              <p className="text-2xl font-bold text-[var(--text-hi)]">
                 ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
-              <p className={`text-xs font-medium mt-1 ${portfolioGain >= 0 ? "text-[#10B981]" : "text-[#EF4444]"}`}>
+              <p className={`text-xs font-medium mt-1 ${portfolioGain >= 0 ? "text-[var(--clr-green)]" : "text-[var(--clr-red)]"}`}>
                 {portfolioGain >= 0 ? "+" : ""}${portfolioGain.toFixed(2)} all-time
               </p>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
-              <div className="bg-[#111D35] rounded-xl p-3">
-                <p className="text-[#64748B] text-[10px] uppercase tracking-wider mb-1">Invested</p>
-                <p className="font-semibold text-sm text-[#60A5FA]">
+              <div className="bg-[var(--bg-input)] rounded-xl p-3">
+                <p className="text-[var(--text-lo)] text-[10px] uppercase tracking-wider mb-1">Invested</p>
+                <p className="font-semibold text-sm text-[var(--clr-blue-lt)]">
                   ${totalValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </div>
-              <div className="bg-[#111D35] rounded-xl p-3">
-                <p className="text-[#64748B] text-[10px] uppercase tracking-wider mb-1">Cash</p>
-                <p className="font-semibold text-sm text-[#10B981]">
+              <div className="bg-[var(--bg-input)] rounded-xl p-3">
+                <p className="text-[var(--text-lo)] text-[10px] uppercase tracking-wider mb-1">Cash</p>
+                <p className="font-semibold text-sm text-[var(--clr-green)]">
                   ${accountBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                 </p>
               </div>
@@ -398,17 +401,17 @@ export default function Home() {
 
           {/* Holdings list */}
           <div className="flex-1 overflow-y-auto p-4">
-            <p className="text-[#475569] text-[10px] font-semibold uppercase tracking-widest mb-3">Holdings</p>
+            <p className="text-[var(--text-dim)] text-[10px] font-semibold uppercase tracking-widest mb-3">Holdings</p>
 
             {portfolio.length === 0 ? (
               <div className="text-center py-10">
-                <div className="w-10 h-10 bg-[#111D35] rounded-full flex items-center justify-center mx-auto mb-3">
-                  <svg className="w-5 h-5 text-[#475569]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-10 h-10 bg-[var(--bg-input)] rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-5 h-5 text-[var(--text-dim)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
                   </svg>
                 </div>
-                <p className="text-[#475569] text-xs">No holdings yet.</p>
-                <p className="text-[#3B4A60] text-xs mt-1">Search a stock to begin.</p>
+                <p className="text-[var(--text-dim)] text-xs">No holdings yet.</p>
+                <p className="text-[var(--text-ghost)] text-xs mt-1">Search a stock to begin.</p>
               </div>
             ) : (
               <div className="space-y-1.5">
@@ -418,25 +421,25 @@ export default function Home() {
                     onClick={() => selectStock(h.ticker)}
                     className={`w-full text-left p-3 rounded-xl border transition-all group ${
                       selectedSymbol === h.ticker
-                        ? "bg-[#3B82F6]/10 border-[#3B82F6]/35 shadow-[0_0_12px_rgba(59,130,246,0.1)]"
-                        : "bg-[#111D35]/50 border-transparent hover:bg-[#111D35] hover:border-[#1E3A5F]"
+                        ? "bg-[var(--clr-blue)]/10 border-[var(--clr-blue)]/35 shadow-[0_0_12px_rgba(59,130,246,0.1)]"
+                        : "bg-[var(--bg-input)]/50 border-transparent hover:bg-[var(--bg-input)] hover:border-[var(--clr-border)]"
                     }`}
                   >
                     <div className="flex justify-between items-start">
                       <div>
-                        <span className="font-bold text-sm text-[#E2E8F0]">{h.ticker}</span>
-                        <p className="text-[#64748B] text-[11px] truncate max-w-[100px] mt-0.5">{h.name}</p>
+                        <span className="font-bold text-sm text-[var(--text-hi)]">{h.ticker}</span>
+                        <p className="text-[var(--text-lo)] text-[11px] truncate max-w-[100px] mt-0.5">{h.name}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-sm text-[#E2E8F0]">
+                        <p className="font-semibold text-sm text-[var(--text-hi)]">
                           ${h.value.toLocaleString(undefined, { minimumFractionDigits: 2 })}
                         </p>
-                        <p className={`text-[11px] font-semibold mt-0.5 ${h.change >= 0 ? "text-[#10B981]" : "text-[#EF4444]"}`}>
+                        <p className={`text-[11px] font-semibold mt-0.5 ${h.change >= 0 ? "text-[var(--clr-green)]" : "text-[var(--clr-red)]"}`}>
                           {h.change >= 0 ? "▲" : "▼"} {Math.abs(h.change).toFixed(2)}%
                         </p>
                       </div>
                     </div>
-                    <div className="flex justify-between mt-2 text-[10px] text-[#475569]">
+                    <div className="flex justify-between mt-2 text-[10px] text-[var(--text-dim)]">
                       <span>{h.shares} shares</span>
                       <span>${h.currentPrice.toFixed(2)}</span>
                     </div>
@@ -454,19 +457,19 @@ export default function Home() {
           {!selectedSymbol && (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
               <div className="relative mb-8">
-                <div className="w-24 h-24 bg-gradient-to-br from-[#3B82F6]/15 to-[#D4AF37]/15 rounded-full flex items-center justify-center border border-[#3B82F6]/15">
-                  <svg className="w-12 h-12 text-[#3B82F6]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="w-24 h-24 bg-gradient-to-br from-[var(--clr-blue)]/15 to-[var(--clr-gold)]/15 rounded-full flex items-center justify-center border border-[var(--clr-blue)]/15">
+                  <svg className="w-12 h-12 text-[var(--clr-blue)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
                   </svg>
                 </div>
-                <div className="absolute -top-1 -right-1 w-6 h-6 bg-[#10B981] rounded-full flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.5)]">
+                <div className="absolute -top-1 -right-1 w-6 h-6 bg-[var(--clr-green)] rounded-full flex items-center justify-center shadow-[0_0_12px_rgba(16,185,129,0.5)]">
                   <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 10l7-7m0 0l7 7m-7-7v18" />
                   </svg>
                 </div>
               </div>
-              <h2 className="text-2xl font-bold text-[#E2E8F0] mb-2">Pick a stock to get started</h2>
-              <p className="text-[#475569] max-w-xs text-sm leading-relaxed">
+              <h2 className="text-2xl font-bold text-[var(--text-hi)] mb-2">Pick a stock to get started</h2>
+              <p className="text-[var(--text-dim)] max-w-xs text-sm leading-relaxed">
                 Search for any stock using the bar above, or click a holding on the left to view its chart and trade.
               </p>
             </div>
@@ -475,20 +478,20 @@ export default function Home() {
           {/* Loading stock */}
           {selectedSymbol && stockLoading && (
             <div className="h-full flex flex-col items-center justify-center gap-3">
-              <div className="w-8 h-8 border-2 border-[#3B82F6]/20 border-t-[#3B82F6] rounded-full animate-spin" />
-              <span className="text-[#475569] text-sm">Loading {selectedSymbol}…</span>
+              <div className="w-8 h-8 border-2 border-[var(--clr-blue)]/20 border-t-[var(--clr-blue)] rounded-full animate-spin" />
+              <span className="text-[var(--text-dim)] text-sm">Loading {selectedSymbol}…</span>
             </div>
           )}
 
           {/* Error */}
           {selectedSymbol && stockError && (
             <div className="h-full flex items-center justify-center">
-              <div className="bg-[#EF4444]/10 border border-[#EF4444]/25 rounded-2xl p-6 text-center max-w-sm">
-                <p className="text-[#FCA5A5] font-medium mb-1">Failed to load {selectedSymbol}</p>
-                <p className="text-[#64748B] text-sm">{stockError}</p>
+              <div className="bg-[var(--clr-red)]/10 border border-[var(--clr-red)]/25 rounded-2xl p-6 text-center max-w-sm">
+                <p className="text-[var(--clr-salmon)] font-medium mb-1">Failed to load {selectedSymbol}</p>
+                <p className="text-[var(--text-lo)] text-sm">{stockError}</p>
                 <button
                   onClick={() => selectStock(selectedSymbol)}
-                  className="mt-4 px-4 py-2 bg-[#EF4444]/15 hover:bg-[#EF4444]/25 text-[#FCA5A5] rounded-xl text-sm transition-all"
+                  className="mt-4 px-4 py-2 bg-[var(--clr-red)]/15 hover:bg-[var(--clr-red)]/25 text-[var(--clr-salmon)] rounded-xl text-sm transition-all"
                 >
                   Retry
                 </button>
@@ -504,24 +507,24 @@ export default function Home() {
               <div className="flex items-start justify-between flex-wrap gap-4">
                 <div>
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h1 className="text-3xl font-extrabold text-[#E2E8F0]">{stockData.symbol}</h1>
+                    <h1 className="text-3xl font-extrabold text-[var(--text-hi)]">{stockData.symbol}</h1>
                     <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-bold ${
                       stockData.changes >= 0
-                        ? "bg-[#10B981]/12 text-[#10B981] border border-[#10B981]/20"
-                        : "bg-[#EF4444]/12 text-[#EF4444] border border-[#EF4444]/20"
+                        ? "bg-[var(--clr-green)]/12 text-[var(--clr-green)] border border-[var(--clr-green)]/20"
+                        : "bg-[var(--clr-red)]/12 text-[var(--clr-red)] border border-[var(--clr-red)]/20"
                     }`}>
                       {stockData.changes >= 0 ? "▲" : "▼"} {Math.abs(stockData.changes).toFixed(2)}%
                     </span>
-                    <span className="text-[#475569] text-sm px-2 py-1 bg-[#111D35] rounded-lg border border-[#1E3A5F]">
+                    <span className="text-[var(--text-dim)] text-sm px-2 py-1 bg-[var(--bg-input)] rounded-lg border border-[var(--clr-border)]">
                       {stockData.exchange}
                     </span>
                   </div>
-                  <p className="text-[#94A3B8] mt-1.5">{stockData.companyName}</p>
+                  <p className="text-[var(--text-md)] mt-1.5">{stockData.companyName}</p>
                 </div>
                 <div className="text-right">
-                  <p className="text-4xl font-extrabold text-[#E2E8F0]">${stockData.price.toFixed(2)}</p>
+                  <p className="text-4xl font-extrabold text-[var(--text-hi)]">${stockData.price.toFixed(2)}</p>
                   {currentShares > 0 && (
-                    <p className="text-[#60A5FA] text-sm mt-1">
+                    <p className="text-[var(--clr-blue-lt)] text-sm mt-1">
                       You own <strong>{currentShares}</strong> share{currentShares !== 1 ? "s" : ""}
                       {" "}· <strong>${(currentShares * stockData.price).toFixed(2)}</strong>
                     </p>
@@ -530,10 +533,10 @@ export default function Home() {
               </div>
 
               {/* Chart */}
-              <div className="bg-[#0D1626] border border-[#1E3A5F]/30 rounded-2xl p-5">
+              <div className="bg-[var(--bg-surface)] border border-[var(--clr-border)]/30 rounded-2xl p-5">
                 {historicalData.length > 0
                   ? <TradingChart data={historicalData} />
-                  : <div className="h-[380px] flex items-center justify-center text-[#475569]">No chart data available</div>
+                  : <div className="h-[380px] flex items-center justify-center text-[var(--text-dim)]">No chart data available</div>
                 }
               </div>
 
@@ -541,29 +544,29 @@ export default function Home() {
               <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
 
                 {/* Trade panel */}
-                <div className="bg-[#0D1626] border border-[#1E3A5F]/30 rounded-2xl p-5">
-                  <h3 className="font-semibold text-[#E2E8F0] mb-4">Trade {stockData.symbol}</h3>
+                <div className="bg-[var(--bg-surface)] border border-[var(--clr-border)]/30 rounded-2xl p-5">
+                  <h3 className="font-semibold text-[var(--text-hi)] mb-4">Trade {stockData.symbol}</h3>
 
                   <div className="flex items-center gap-3 mb-5">
-                    <div className="flex items-center bg-[#111D35] border border-[#1E3A5F] rounded-xl overflow-hidden">
+                    <div className="flex items-center bg-[var(--bg-input)] border border-[var(--clr-border)] rounded-xl overflow-hidden">
                       <button
                         onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                        className="px-3 py-2.5 text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-[#1E3A5F]/40 transition-all text-lg font-bold"
+                        className="px-3 py-2.5 text-[var(--text-md)] hover:text-[var(--text-hi)] hover:bg-[var(--clr-border)]/40 transition-all text-lg font-bold"
                       >−</button>
                       <input
                         type="number"
                         min="1"
                         value={quantity}
                         onChange={(e) => setQuantity(Math.max(1, parseInt(e.target.value) || 1))}
-                        className="w-14 bg-transparent text-center text-[#E2E8F0] font-semibold focus:outline-none py-2.5 text-sm"
+                        className="w-14 bg-transparent text-center text-[var(--text-hi)] font-semibold focus:outline-none py-2.5 text-sm"
                       />
                       <button
                         onClick={() => setQuantity(q => q + 1)}
-                        className="px-3 py-2.5 text-[#94A3B8] hover:text-[#E2E8F0] hover:bg-[#1E3A5F]/40 transition-all text-lg font-bold"
+                        className="px-3 py-2.5 text-[var(--text-md)] hover:text-[var(--text-hi)] hover:bg-[var(--clr-border)]/40 transition-all text-lg font-bold"
                       >+</button>
                     </div>
-                    <div className="text-sm text-[#64748B]">
-                      Total: <span className="text-[#E2E8F0] font-semibold">${(quantity * stockData.price).toFixed(2)}</span>
+                    <div className="text-sm text-[var(--text-lo)]">
+                      Total: <span className="text-[var(--text-hi)] font-semibold">${(quantity * stockData.price).toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -571,44 +574,44 @@ export default function Home() {
                     <button
                       onClick={() => handleTransaction("buy")}
                       disabled={transacting}
-                      className="bg-[#10B981] hover:bg-[#059669] active:scale-[0.97] disabled:opacity-40 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] text-sm"
+                      className="bg-[var(--clr-green)] hover:opacity-85 active:scale-[0.97] disabled:opacity-40 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(16,185,129,0.2)] text-sm"
                     >
                       {transacting ? "…" : `Buy ${quantity} Share${quantity > 1 ? "s" : ""}`}
                     </button>
                     <button
                       onClick={() => handleTransaction("sell")}
                       disabled={transacting || currentShares < quantity}
-                      className="bg-[#EF4444] hover:bg-[#DC2626] active:scale-[0.97] disabled:opacity-30 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)] text-sm"
+                      className="bg-[var(--clr-red)] hover:opacity-85 active:scale-[0.97] disabled:opacity-30 text-white font-bold py-3.5 rounded-xl transition-all shadow-[0_0_20px_rgba(239,68,68,0.2)] text-sm"
                     >
                       {transacting ? "…" : `Sell ${quantity} Share${quantity > 1 ? "s" : ""}`}
                     </button>
                   </div>
 
                   {currentShares > 0 && currentShares < quantity && (
-                    <p className="text-[#F59E0B] text-xs mt-3 text-center">
+                    <p className="text-[var(--clr-amber)] text-xs mt-3 text-center">
                       You only own {currentShares} share{currentShares !== 1 ? "s" : ""}
                     </p>
                   )}
 
-                  <div className="mt-5 pt-4 border-t border-[#1E3A5F]/30 grid grid-cols-2 gap-3 text-sm">
-                    <div className="flex justify-between text-[#64748B]">
+                  <div className="mt-5 pt-4 border-t border-[var(--clr-border)]/30 grid grid-cols-2 gap-3 text-sm">
+                    <div className="flex justify-between text-[var(--text-lo)]">
                       <span>Avg cost</span>
-                      <span className="text-[#E2E8F0]">
+                      <span className="text-[var(--text-hi)]">
                         {currentShares > 0
                           ? `$${portfolio.find(h => h.ticker === selectedSymbol)?.avgPrice?.toFixed(2) ?? "—"}`
                           : "—"}
                       </span>
                     </div>
-                    <div className="flex justify-between text-[#64748B]">
+                    <div className="flex justify-between text-[var(--text-lo)]">
                       <span>Cash left</span>
-                      <span className="text-[#10B981]">${accountBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+                      <span className="text-[var(--clr-green)]">${accountBalance.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
                     </div>
                   </div>
                 </div>
 
                 {/* Stats panel */}
-                <div className="bg-[#0D1626] border border-[#1E3A5F]/30 rounded-2xl p-5">
-                  <h3 className="font-semibold text-[#E2E8F0] mb-4">Key Statistics</h3>
+                <div className="bg-[var(--bg-surface)] border border-[var(--clr-border)]/30 rounded-2xl p-5">
+                  <h3 className="font-semibold text-[var(--text-hi)] mb-4">Key Statistics</h3>
                   <div className="grid grid-cols-2 gap-3">
                     {[
                       { label: "Market Cap",  value: `$${(stockData.mktCap / 1e9).toFixed(2)}B` },
@@ -618,9 +621,9 @@ export default function Home() {
                       { label: "Prev Close",  value: stockData.previousClose != null ? `$${Number(stockData.previousClose).toFixed(2)}` : "N/A" },
                       { label: "Exchange",    value: stockData.exchange ?? "N/A" },
                     ].map(({ label, value }) => (
-                      <div key={label} className="bg-[#111D35] rounded-xl p-3 border border-[#1E3A5F]/20">
-                        <p className="text-[#64748B] text-[11px] uppercase tracking-wider mb-1">{label}</p>
-                        <p className="font-semibold text-[#E2E8F0] text-sm">{value}</p>
+                      <div key={label} className="bg-[var(--bg-input)] rounded-xl p-3 border border-[var(--clr-border)]/20">
+                        <p className="text-[var(--text-lo)] text-[11px] uppercase tracking-wider mb-1">{label}</p>
+                        <p className="font-semibold text-[var(--text-hi)] text-sm">{value}</p>
                       </div>
                     ))}
                   </div>
@@ -638,12 +641,12 @@ export default function Home() {
           className="fixed inset-0 bg-black/70 z-50 flex items-center justify-center p-4"
           onClick={(e) => { if (e.target === e.currentTarget) setProfileOpen(false); }}
         >
-          <div className="bg-[#0D1626] border border-[#1E3A5F]/40 rounded-2xl p-6 w-full max-w-sm shadow-[0_0_60px_rgba(59,130,246,0.1)]">
+          <div className="bg-[var(--bg-surface)] border border-[var(--clr-border)]/40 rounded-2xl p-6 w-full max-w-sm shadow-[0_0_60px_rgba(59,130,246,0.1)]">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-lg font-bold text-[#E2E8F0]">Profile</h2>
+              <h2 className="text-lg font-bold text-[var(--text-hi)]">Profile</h2>
               <button
                 onClick={() => setProfileOpen(false)}
-                className="text-[#475569] hover:text-[#E2E8F0] transition-colors"
+                className="text-[var(--text-dim)] hover:text-[var(--text-hi)] transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -651,25 +654,47 @@ export default function Home() {
               </button>
             </div>
 
+            {/* Theme toggle */}
+            <div className="flex items-center justify-between bg-[var(--bg-input)] border border-[var(--clr-border)] rounded-xl px-4 py-3 mb-6">
+              <span className="text-[var(--text-hi)] text-sm font-medium">
+                {theme === "dark" ? "Dark mode" : "Light mode"}
+              </span>
+              <button
+                onClick={toggleTheme}
+                className="w-8 h-8 bg-[var(--bg-surface)] hover:bg-[var(--clr-border)]/40 border border-[var(--clr-border)] rounded-full flex items-center justify-center transition-all"
+                aria-label="Toggle theme"
+              >
+                {theme === "dark" ? (
+                  <svg className="w-4 h-4 text-[var(--clr-gold)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364-6.364l-.707.707M6.343 17.657l-.707.707M17.657 17.657l-.707-.707M6.343 6.343l-.707-.707M12 8a4 4 0 100 8 4 4 0 000-8z" />
+                  </svg>
+                ) : (
+                  <svg className="w-4 h-4 text-[var(--clr-blue)]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                  </svg>
+                )}
+              </button>
+            </div>
+
             <div className="grid grid-cols-2 gap-3 mb-6">
               <div>
-                <label className="text-[#64748B] text-xs uppercase tracking-wider block mb-1.5">First name</label>
+                <label className="text-[var(--text-lo)] text-xs uppercase tracking-wider block mb-1.5">First name</label>
                 <input
                   type="text"
                   maxLength={50}
                   value={editFirstName}
                   onChange={(e) => setEditFirstName(e.target.value)}
-                  className="w-full bg-[#111D35] border border-[#1E3A5F] rounded-xl px-3 py-2.5 text-[#E2E8F0] text-sm focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 transition-all"
+                  className="w-full bg-[var(--bg-input)] border border-[var(--clr-border)] rounded-xl px-3 py-2.5 text-[var(--text-hi)] text-sm focus:outline-none focus:border-[var(--clr-blue)] focus:ring-1 focus:ring-[var(--clr-blue)]/30 transition-all"
                 />
               </div>
               <div>
-                <label className="text-[#64748B] text-xs uppercase tracking-wider block mb-1.5">Last name</label>
+                <label className="text-[var(--text-lo)] text-xs uppercase tracking-wider block mb-1.5">Last name</label>
                 <input
                   type="text"
                   maxLength={50}
                   value={editLastName}
                   onChange={(e) => setEditLastName(e.target.value)}
-                  className="w-full bg-[#111D35] border border-[#1E3A5F] rounded-xl px-3 py-2.5 text-[#E2E8F0] text-sm focus:outline-none focus:border-[#3B82F6] focus:ring-1 focus:ring-[#3B82F6]/30 transition-all"
+                  className="w-full bg-[var(--bg-input)] border border-[var(--clr-border)] rounded-xl px-3 py-2.5 text-[var(--text-hi)] text-sm focus:outline-none focus:border-[var(--clr-blue)] focus:ring-1 focus:ring-[var(--clr-blue)]/30 transition-all"
                 />
               </div>
             </div>
@@ -677,21 +702,21 @@ export default function Home() {
             <button
               onClick={handleSaveProfile}
               disabled={savingProfile}
-              className="w-full bg-gradient-to-r from-[#3B82F6] to-[#D4AF37] text-white font-semibold py-2.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 text-sm mb-4"
+              className="w-full bg-gradient-to-r from-[var(--clr-blue)] to-[var(--clr-gold)] text-white font-semibold py-2.5 rounded-xl hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 text-sm mb-4"
             >
               {savingProfile ? "Saving…" : "Save Changes"}
             </button>
 
-            <div className="border-t border-[#1E3A5F]/40 pt-4">
-              <p className="text-[#64748B] text-xs mb-3">Danger zone</p>
+            <div className="border-t border-[var(--clr-border)]/40 pt-4">
+              <p className="text-[var(--text-lo)] text-xs mb-3">Danger zone</p>
               <button
                 onClick={handleResetSimulation}
                 disabled={resetting}
-                className="w-full bg-[#EF4444]/10 hover:bg-[#EF4444]/20 border border-[#EF4444]/25 text-[#EF4444] font-medium py-2.5 rounded-xl transition-all disabled:opacity-50 text-sm"
+                className="w-full bg-[var(--clr-red)]/10 hover:bg-[var(--clr-red)]/20 border border-[var(--clr-red)]/25 text-[var(--clr-red)] font-medium py-2.5 rounded-xl transition-all disabled:opacity-50 text-sm"
               >
                 {resetting ? "Resetting…" : "Reset Simulation"}
               </button>
-              <p className="text-[#3B4A60] text-xs mt-2 text-center">
+              <p className="text-[var(--text-ghost)] text-xs mt-2 text-center">
                 Deletes all holdings &amp; transactions, restores $100,000
               </p>
             </div>

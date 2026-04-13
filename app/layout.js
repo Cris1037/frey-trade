@@ -1,5 +1,6 @@
 import localFont from "next/font/local";
 import "./globals.css";
+import { ThemeProvider } from "./_utils/theme-context";
 
 const afacad = localFont({
   src: "../public/assets/fonts/Afacad-Regular.ttf",
@@ -22,9 +23,17 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className={`${afacad.variable} ${raleway.variable} bg-[#060B18] min-h-screen text-[#E2E8F0] antialiased`}>
-        {children}
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Anti-FOUC: apply theme before React hydrates */}
+        <script dangerouslySetInnerHTML={{ __html:
+          `(function(){var t=localStorage.getItem('ft-theme')||(window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.setAttribute('data-theme',t);})();`
+        }} />
+      </head>
+      <body className={`${afacad.variable} ${raleway.variable} min-h-screen antialiased`}>
+        <ThemeProvider>
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
