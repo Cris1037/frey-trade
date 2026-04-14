@@ -10,6 +10,7 @@ import {
 } from "firebase/firestore";
 import Image from "next/image";
 import TradingChart from "../../components/trading-chart";
+import PortfolioHistoryChart from "../../components/portfolio-history-chart";
 import StockSearch from "../../components/stock-search";
 import { useTheme } from "../_utils/theme-context";
 
@@ -44,6 +45,11 @@ export default function Home() {
 
   // Mobile sidebar
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Tabs: "stock" | "portfolio"
+  const [activeTab, setActiveTab] = useState(null);
+  const [portfolioHistoryData, setPortfolioHistoryData] = useState([]);
+  const [portfolioHistoryLoading, setPortfolioHistoryLoading] = useState(false);
 
   // ── Portfolio fetch ────────────────────────────────────────────
   const fetchPortfolio = useCallback(async (userId) => {
@@ -89,9 +95,105 @@ export default function Home() {
     }
   }, []);
 
+  // ── Fetch portfolio history ────────────────────────────────────
+  const fetchPortfolioHistory = useCallback(async (userId) => {
+    setPortfolioHistoryLoading(true);
+    try {
+      const txSnap = await getDocs(query(collection(db, "transactions"), where("user_id", "==", userId)));
+      const transactions = txSnap.docs.map(d => ({ ...d.data(), id: d.id }));
+
+      // Sort transactions by created_at
+      transactions.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
+      const snapshots = [];
+      let holdings = {}; // symbol -> { shares, totalCost, avgPrice }
+      let balance = 100000; // Starting balance
+
+      // Add initial snapshot
+      snapshots.push({
+        date: new Date().toISOString(),
+        value: 100000,
+        timestamp: new Date().getTime()
+      });
+
+      // Process each transaction
+      for (const tx of transactions) {
+        const txDate = new Date(tx.created_at);
+        const price = tx.price_at_exec;
+        const amount = price * tx.shares;
+
+        if (tx.type === "buy") {
+          balance -= amount;
+          if (!holdings[tx.stock_symbol]) {
+            holdings[tx.stock_symbol] = { shares: 0, totalCost: 0 };
+          }
+          holdings[tx.stock_symbol].shares += tx.shares;
+          holdings[tx.stock_symbol].totalCost += amount;
+          holdings[tx.stock_symbol].avgPrice = holdings[tx.stock_symbol].totalCost / holdings[tx.stock_symbol].shares;
+        } else {
+          balance += amount;
+          if (holdings[tx.stock_symbol]) {
+            holdings[tx.stock_symbol].shares -= tx.shares;
+            if (holdings[tx.stock_symbol].shares === 0) {
+              delete holdings[tx.stock_symbol];
+            }
+          }
+        }
+
+        // Portfolio value = cash + cost basis of holdings (conservative estimate)
+        let portfolioValue = balance;
+        for (let symbol in holdings) {
+          if (holdings[symbol].shares > 0) {
+            portfolioValue += holdings[symbol].totalCost;
+          }
+        }
+
+        snapshots.push({
+          date: txDate.toISOString(),
+          value: Math.round(portfolioValue * 100) / 100,
+          timestamp: txDate.getTime()
+        });
+      }
+
+      // Format for chart (x = time as YYYY-MM-DD, y = value)
+      const chartData = snapshots.map((s) => {
+        const dateObj = new Date(s.date);
+        const year = dateObj.getFullYear();
+        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+        const day = String(dateObj.getDate()).padStart(2, '0');
+        return {
+          time: `${year}-${month}-${day}`,
+          value: s.value,
+          timestamp: s.timestamp
+        };
+      });
+
+      // Remove duplicates for same date (keep latest)
+      const uniqueData = [];
+      let lastTime = null;
+      for (const point of chartData) {
+        if (point.time !== lastTime) {
+          uniqueData.push(point);
+          lastTime = point.time;
+        } else {
+          uniqueData[uniqueData.length - 1] = point;
+        }
+      }
+
+      setPortfolioHistoryData(uniqueData);
+      setActiveTab("portfolio");
+    } catch (err) {
+      console.error("Portfolio history fetch error:", err);
+      alert("Failed to load portfolio history: " + err.message);
+    } finally {
+      setPortfolioHistoryLoading(false);
+    }
+  }, []);
+
   // ── Select a stock ─────────────────────────────────────────────
   const selectStock = useCallback(async (symbol) => {
     setSelectedSymbol(symbol);
+    setActiveTab("stock");
     setStockData(null);
     setHistoricalData([]);
     setStockLoading(true);
@@ -373,15 +475,18 @@ export default function Home() {
         ].join(" ")}>
           {/* Summary cards */}
           <div className="p-4 space-y-3 border-b border-[var(--clr-border)]/30">
-            <div className="bg-gradient-to-br from-[var(--clr-blue)]/10 to-[var(--clr-gold)]/10 border border-[var(--clr-blue)]/15 rounded-xl p-4">
-              <p className="text-[var(--text-lo)] text-[11px] uppercase tracking-wider mb-1">Total Value</p>
+            <button
+              onClick={() => user && fetchPortfolioHistory(user.uid)}
+              className="w-full text-left bg-gradient-to-br from-[var(--clr-blue)]/10 to-[var(--clr-gold)]/10 border border-[var(--clr-blue)]/15 rounded-xl p-4 hover:border-[var(--clr-blue)]/35 hover:shadow-[0_0_12px_rgba(59,130,246,0.1)] transition-all group"
+            >
+              <p className="text-[var(--text-lo)] text-[11px] uppercase tracking-wider mb-1 group-hover:text-[var(--text-md)] transition-colors">Total Value</p>
               <p className="text-2xl font-bold text-[var(--text-hi)]">
                 ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
               </p>
               <p className={`text-xs font-medium mt-1 ${portfolioGain >= 0 ? "text-[var(--clr-green)]" : "text-[var(--clr-red)]"}`}>
                 {portfolioGain >= 0 ? "+" : ""}${portfolioGain.toFixed(2)} all-time
               </p>
-            </div>
+            </button>
 
             <div className="grid grid-cols-2 gap-2">
               <div className="bg-[var(--bg-input)] rounded-xl p-3">
@@ -451,10 +556,60 @@ export default function Home() {
         </aside>
 
         {/* ── Main content ── */}
-        <main className="flex-1 overflow-y-auto">
+        <main className="flex-1 overflow-y-auto flex flex-col">
 
-          {/* Empty state */}
-          {!selectedSymbol && (
+          {/* Tab Navigation */}
+          {activeTab && (
+            <div className="shrink-0 border-b border-[var(--clr-border)]/30 bg-[var(--bg-surface)]/50 backdrop-blur-sm px-6 py-4">
+              <div className="flex items-center gap-4">
+                {activeTab === "stock" && selectedSymbol && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-[var(--text-dim)] uppercase">Stock</span>
+                    <h2 className="text-xl font-bold text-[var(--text-hi)]">
+                      {stockLoading ? (
+                        <span className="inline-flex items-center gap-2">
+                          <span className="w-4 h-4 border-2 border-[var(--clr-blue)]/20 border-t-[var(--clr-blue)] rounded-full animate-spin" />
+                          Loading {selectedSymbol}…
+                        </span>
+                      ) : (
+                        selectedSymbol
+                      )}
+                    </h2>
+                  </div>
+                )}
+                {activeTab === "portfolio" && (
+                  <div className="flex items-center gap-3">
+                    <span className="text-sm font-medium text-[var(--text-dim)] uppercase">Portfolio</span>
+                    <h2 className="text-xl font-bold text-[var(--text-hi)]">
+                      {portfolioHistoryLoading ? (
+                        <span className="inline-flex items-center gap-2">
+                          <span className="w-4 h-4 border-2 border-[var(--clr-blue)]/20 border-t-[var(--clr-blue)] rounded-full animate-spin" />
+                          Loading History…
+                        </span>
+                      ) : (
+                        "History"
+                      )}
+                    </h2>
+                  </div>
+                )}
+                <button
+                  onClick={() => {
+                    setActiveTab(null);
+                    setSelectedSymbol(null);
+                  }}
+                  className="ml-auto px-3 py-2 text-sm text-[var(--text-dim)] hover:text-[var(--text-hi)] hover:bg-[var(--clr-border)]/20 rounded-lg transition-all"
+                >
+                  ← Close
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* Content Area */}
+          <div className="flex-1 overflow-y-auto">
+
+            {/* Empty state */}
+            {!activeTab && (
             <div className="h-full flex flex-col items-center justify-center text-center p-8">
               <div className="relative mb-8">
                 <div className="w-24 h-24 bg-gradient-to-br from-[var(--clr-blue)]/15 to-[var(--clr-gold)]/15 rounded-full flex items-center justify-center border border-[var(--clr-blue)]/15">
@@ -475,16 +630,16 @@ export default function Home() {
             </div>
           )}
 
-          {/* Loading stock */}
-          {selectedSymbol && stockLoading && (
-            <div className="h-full flex flex-col items-center justify-center gap-3">
-              <div className="w-8 h-8 border-2 border-[var(--clr-blue)]/20 border-t-[var(--clr-blue)] rounded-full animate-spin" />
-              <span className="text-[var(--text-dim)] text-sm">Loading {selectedSymbol}…</span>
-            </div>
-          )}
+            {/* Loading stock */}
+            {activeTab === "stock" && stockLoading && (
+              <div className="h-full flex flex-col items-center justify-center gap-3">
+                <div className="w-8 h-8 border-2 border-[var(--clr-blue)]/20 border-t-[var(--clr-blue)] rounded-full animate-spin" />
+                <span className="text-[var(--text-dim)] text-sm">Fetching stock data…</span>
+              </div>
+            )}
 
-          {/* Error */}
-          {selectedSymbol && stockError && (
+            {/* Error */}
+            {activeTab === "stock" && stockError && (
             <div className="h-full flex items-center justify-center">
               <div className="bg-[var(--clr-red)]/10 border border-[var(--clr-red)]/25 rounded-2xl p-6 text-center max-w-sm">
                 <p className="text-[var(--clr-salmon)] font-medium mb-1">Failed to load {selectedSymbol}</p>
@@ -499,8 +654,55 @@ export default function Home() {
             </div>
           )}
 
-          {/* Stock detail */}
-          {selectedSymbol && !stockLoading && !stockError && stockData && (
+            {/* Portfolio history view */}
+            {activeTab === "portfolio" && !portfolioHistoryLoading && (
+              <div className="p-6 space-y-5">
+                {/* Chart */}
+                <div className="bg-[var(--bg-surface)] border border-[var(--clr-border)]/30 rounded-2xl p-5">
+                  {portfolioHistoryData.length > 0 ? (
+                    <PortfolioHistoryChart data={portfolioHistoryData} />
+                  ) : (
+                    <div className="h-[380px] flex items-center justify-center text-[var(--text-dim)]">
+                      No transactions yet. Make your first trade to see history.
+                    </div>
+                  )}
+                </div>
+
+                {/* Stats */}
+                {portfolioHistoryData.length > 0 && (
+                  <div className="bg-[var(--bg-surface)] border border-[var(--clr-border)]/30 rounded-2xl p-5">
+                    <h3 className="font-semibold text-[var(--text-hi)] mb-4">Summary</h3>
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                      <div>
+                        <p className="text-[var(--text-lo)] text-[11px] uppercase tracking-wider mb-1">Current Value</p>
+                        <p className="text-xl font-bold text-[var(--text-hi)]">
+                          ${totalPortfolioValue.toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[var(--text-lo)] text-[11px] uppercase tracking-wider mb-1">All-Time Gain</p>
+                        <p className={`text-xl font-bold ${portfolioGain >= 0 ? "text-[var(--clr-green)]" : "text-[var(--clr-red)]"}`}>
+                          ${portfolioGain.toFixed(2)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-[var(--text-lo)] text-[11px] uppercase tracking-wider mb-1">Starting Balance</p>
+                        <p className="text-xl font-bold text-[var(--text-hi)]">$100,000.00</p>
+                      </div>
+                      <div>
+                        <p className="text-[var(--text-lo)] text-[11px] uppercase tracking-wider mb-1">Total Return</p>
+                        <p className={`text-xl font-bold ${((totalPortfolioValue - 100000) / 100000) >= 0 ? "text-[var(--clr-green)]" : "text-[var(--clr-red)]"}`}>
+                          {(((totalPortfolioValue - 100000) / 100000) * 100).toFixed(2)}%
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Stock detail */}
+            {activeTab === "stock" && !stockLoading && !stockError && stockData && (
             <div className="p-6 space-y-5">
 
               {/* Header */}
@@ -632,6 +834,7 @@ export default function Home() {
               </div>
             </div>
           )}
+          </div>
         </main>
       </div>
 
